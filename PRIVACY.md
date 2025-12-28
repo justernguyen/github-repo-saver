@@ -59,7 +59,7 @@ You can delete your data at any time by:
 
 If you have questions about this privacy policy, contact:
 - **Email**: dacthinh05@gmail.com
-- **GitHub**: https://github.com/dacthinh05
+- **GitHub**: https://github.com/justernguyen
 
 ## Changes to This Policy
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GitHub Repo Saver",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Save and organize GitHub repos with tags, roles, notes, and status tracking. Local-only storage, no tracking.",
   "author": "Thịnh Lynx",
   "homepage_url": "https://github.com/dacthinh05",

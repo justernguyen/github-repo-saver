@@ -383,7 +383,9 @@
 
     .repo-meta {
       display: flex;
-      gap: 16px;
+      justify-content: space-between;
+      /* Căn đều: trái - giữa - phải */
+      gap: 8px;
       font-size: 12px;
       font-weight: 600;
       color: var(--text-muted);
@@ -392,11 +394,8 @@
       padding: 8px 12px;
       border-radius: 8px;
       flex-shrink: 0;
-      /* Không co lại */
       align-items: center;
-      /* Căn giữa các meta items */
       height: 36px;
-      /* Chiều cao cố định để đảm bảo thẳng hàng */
     }
 
     .meta-item {
@@ -404,15 +403,21 @@
       align-items: center;
       gap: 4px;
       white-space: nowrap;
-      /* Không xuống dòng */
       flex-shrink: 0;
-      /* Không co lại */
+      flex: 1;
+      /* Mỗi item chiếm 1/3 không gian */
+      justify-content: center;
+      /* Căn giữa nội dung trong mỗi item */
     }
 
-    /* Đảm bảo stars luôn ở vị trí đầu tiên và có width cố định */
+    /* Stars ở bên trái */
     .meta-item:first-child {
-      min-width: 60px;
-      /* Đảm bảo đủ chỗ cho icon + số */
+      justify-content: flex-start;
+    }
+
+    /* Date ở bên phải */
+    .meta-item:last-child {
+      justify-content: flex-end;
     }
 
     .repo-tags {
@@ -780,6 +785,7 @@
           <option value="oldest">Oldest first</option>
           <option value="name">Name A-Z</option>
           <option value="stars">Most stars</option>
+          <option value="forks">Most forks</option>
           <option value="updated">Recently updated</option>
         </select>
       </div>

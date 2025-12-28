@@ -84,7 +84,7 @@
       margin-bottom: 40px;
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: flex-start;
       flex-wrap: wrap;
       gap: 20px;
     }
@@ -102,22 +102,41 @@
 
     .header-stats {
       display: flex;
-      gap: 12px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: nowrap;
+      max-width: 680px;
+    }
+
+    .stats-row,
+    .actions-row {
+      display: flex;
       flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    @media (min-width: 1100px) {
+      .stats-row {
+        flex-wrap: nowrap;
+      }
     }
 
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 10px;
+      padding: 8px 14px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 12.5px;
+      font-weight: 600;
       color: var(--text-muted);
       transition: all 0.2s;
+      min-height: 36px;
+      white-space: nowrap;
     }
 
     .stat-card:hover {
@@ -127,6 +146,46 @@
 
     .stat-card b {
       color: var(--text-main);
+    }
+
+    .stat-label {
+      color: #94A3B8;
+      font-weight: 600;
+    }
+
+    .stat-card.button {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Sync toggle looks like a professional pill */
+    #sync-toggle-btn {
+      border-color: rgba(99, 102, 241, 0.35);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.10) 100%);
+      color: #CBD5E1;
+    }
+
+    #sync-toggle-btn[data-enabled="true"] {
+      border-color: rgba(16, 185, 129, 0.45);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.10) 100%);
+      color: #D1FAE5;
+    }
+
+    #sync-toggle-label {
+      font-weight: 800;
+    }
+
+    #sync-status {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #94A3B8;
+      border-style: dashed;
+      border-color: rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    #sync-status b {
+      color: #E2E8F0;
     }
 
     /* Rate 5 Stars Button - Gold & Shiny */
@@ -383,7 +442,9 @@
 
     .repo-meta {
       display: flex;
-      gap: 16px;
+      justify-content: space-between;
+      /* Căn đều: trái - giữa - phải */
+      gap: 8px;
       font-size: 12px;
       font-weight: 600;
       color: var(--text-muted);
@@ -392,11 +453,8 @@
       padding: 8px 12px;
       border-radius: 8px;
       flex-shrink: 0;
-      /* Không co lại */
       align-items: center;
-      /* Căn giữa các meta items */
       height: 36px;
-      /* Chiều cao cố định để đảm bảo thẳng hàng */
     }
 
     .meta-item {
@@ -404,15 +462,21 @@
       align-items: center;
       gap: 4px;
       white-space: nowrap;
-      /* Không xuống dòng */
       flex-shrink: 0;
-      /* Không co lại */
+      flex: 1;
+      /* Mỗi item chiếm 1/3 không gian */
+      justify-content: center;
+      /* Căn giữa nội dung trong mỗi item */
     }
 
-    /* Đảm bảo stars luôn ở vị trí đầu tiên và có width cố định */
+    /* Stars ở bên trái */
     .meta-item:first-child {
-      min-width: 60px;
-      /* Đảm bảo đủ chỗ cho icon + số */
+      justify-content: flex-start;
+    }
+
+    /* Date ở bên phải */
+    .meta-item:last-child {
+      justify-content: flex-end;
     }
 
     .repo-tags {
@@ -751,21 +815,25 @@
         <p style="color: var(--text-muted); font-size: 14px;">Manage and organize your favorite repositories</p>
       </div>
       <div class="header-stats" id="stats-container">
-        <div class="stat-card">📦 <b id="total-count">0</b> repos</div>
-        <div class="stat-card">🔍 <b id="filtered-count">0</b> showing</div>
-        <div class="stat-card">🌑 <b id="unviewed-count">0</b> unviewed</div>
-        <div class="stat-card">🚀 <b id="in-use-count">0</b> in use</div>
-        <button type="button" class="stat-card export-btn" id="export-btn"
-          style="cursor: pointer; border: 1px solid var(--border);">
-          📤 Export
-        </button>
-        <button type="button" class="stat-card import-btn" id="import-btn"
-          style="cursor: pointer; border: 1px solid var(--border);">
-          📥 Import
-        </button>
-        <button type="button" class="stat-card rate-btn" id="rate-btn" style="cursor: pointer;">
-          Rate 5 Stars
-        </button>
+        <div class="stats-row">
+          <div class="stat-card">📦 <b id="total-count">0</b> <span class="stat-label">Repos</span></div>
+          <div class="stat-card">🔍 <b id="filtered-count">0</b> <span class="stat-label">Showing</span></div>
+          <div class="stat-card">🌑 <b id="unviewed-count">0</b> <span class="stat-label">Unviewed</span></div>
+          <div class="stat-card">🚀 <b id="in-use-count">0</b> <span class="stat-label">In use</span></div>
+        </div>
+        <div class="stats-row">
+          <button type="button" class="stat-card button" id="sync-toggle-btn" data-enabled="false">
+            Sync <b id="sync-toggle-label">Off</b>
+          </button>
+          <div class="stat-card" id="sync-status" style="display: none;">
+            <span id="sync-status-text">Sync status</span>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="stat-card button export-btn" id="export-btn">📤 Export</button>
+          <button type="button" class="stat-card button import-btn" id="import-btn">📥 Import</button>
+          <button type="button" class="stat-card button rate-btn" id="rate-btn">Rate 5 Stars</button>
+        </div>
       </div>
     </div>
 
@@ -780,6 +848,7 @@
           <option value="oldest">Oldest first</option>
           <option value="name">Name A-Z</option>
           <option value="stars">Most stars</option>
+          <option value="forks">Most forks</option>
           <option value="updated">Recently updated</option>
         </select>
       </div>
@@ -831,6 +900,13 @@
         <h2>Edit Repository</h2>
       </div>
       <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input id="edit-name" class="form-input" type="text" placeholder="Optional: rename how this repo is shown in your list" />
+        <div style="font-size: 11px; color: #6B7280; margin-top: 4px;">
+          This only changes the name shown in the extension. It does not rename the GitHub repository.
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Description</label>
         <textarea id="edit-description" class="form-textarea" placeholder="Repository description..."
           rows="3"></textarea>
@@ -847,16 +923,6 @@
         <div class="tags-input-container" id="edit-tags-container">
           <input type="text" id="edit-tags-input" class="tag-input" placeholder="Type and press Enter...">
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Status</label>
-        <select id="edit-status" class="form-input">
-          <option value="chuaxem">Unviewed</option>
-          <option value="daxem">Viewed</option>
-          <option value="dathu">Tried</option>
-          <option value="dangdung">In Use</option>
-          <option value="bo">Dropped</option>
-        </select>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="cancel-edit-btn">Cancel</button>

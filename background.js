@@ -2,6 +2,167 @@
 const STORAGE_KEY = "github-repo-saver-repos";
 // Removed license system - now free with donate option
 
+// -----------------------------
+// Chrome Sync (cross-device) support
+// -----------------------------
+// Note: chrome.storage.sync has strict quotas. We store repos in chunked JSON.
+const SYNC_ENABLED_KEY = "github-repo-saver-sync-enabled";
+const SYNC_META_KEY = "github-repo-saver-sync-meta";
+const SYNC_CHUNK_PREFIX = "github-repo-saver-sync-chunk-";
+
+const encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+function byteLength(str) {
+  if (!str) return 0;
+  try {
+    if (encoder) return encoder.encode(str).length;
+  } catch {
+    // ignore
+  }
+  // Fallback (approx, UTF-16)
+  return str.length * 2;
+}
+
+function getSyncQuotas() {
+  const s = chrome?.storage?.sync;
+  return {
+    QUOTA_BYTES: s?.QUOTA_BYTES ?? 102400,
+    QUOTA_BYTES_PER_ITEM: s?.QUOTA_BYTES_PER_ITEM ?? 8192,
+    MAX_ITEMS: s?.MAX_ITEMS ?? 512
+  };
+}
+
+async function getSyncEnabled() {
+  try {
+    const res = await chrome.storage.sync.get(SYNC_ENABLED_KEY);
+    return !!res[SYNC_ENABLED_KEY];
+  } catch {
+    return false;
+  }
+}
+
+async function setSyncEnabled(enabled) {
+  await chrome.storage.sync.set({ [SYNC_ENABLED_KEY]: !!enabled });
+}
+
+function chunkString(str, chunkSize) {
+  const chunks = [];
+  for (let i = 0; i < str.length; i += chunkSize) {
+    chunks.push(str.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+async function readReposFromSync() {
+  try {
+    const metaRes = await chrome.storage.sync.get(SYNC_META_KEY);
+    const meta = metaRes[SYNC_META_KEY];
+    if (!meta || typeof meta !== "object" || !Number.isFinite(meta.chunkCount)) {
+      return { repos: null, meta: null };
+    }
+    const chunkKeys = Array.from({ length: meta.chunkCount }, (_, i) => `${SYNC_CHUNK_PREFIX}${i}`);
+    const chunkRes = await chrome.storage.sync.get(chunkKeys);
+    const json = chunkKeys.map(k => chunkRes[k] || "").join("");
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return { repos: null, meta: null };
+    return { repos: parsed, meta };
+  } catch (e) {
+    return { repos: null, meta: { error: String(e) } };
+  }
+}
+
+async function writeReposToSync(repos, { allowPartial = true } = {}) {
+  const quotas = getSyncQuotas();
+  const chunkSize = Math.min(7800, Math.max(1000, quotas.QUOTA_BYTES_PER_ITEM - 300));
+
+  // Try full first
+  let toSync = Array.isArray(repos) ? repos : [];
+  let json = JSON.stringify(toSync);
+  let jsonBytes = byteLength(json);
+
+  // If too big, optionally sync only most recent subset
+  let partial = false;
+  if (jsonBytes > quotas.QUOTA_BYTES && allowPartial) {
+    const sorted = [...toSync].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+    const subset = [];
+    for (const r of sorted) {
+      subset.push(r);
+      const testJson = JSON.stringify(subset);
+      if (byteLength(testJson) > quotas.QUOTA_BYTES) {
+        subset.pop();
+        break;
+      }
+    }
+    toSync = subset;
+    json = JSON.stringify(toSync);
+    jsonBytes = byteLength(json);
+    partial = toSync.length !== repos.length;
+  }
+
+  // Still too big: hard fail (keep previous sync state)
+  if (jsonBytes > quotas.QUOTA_BYTES) {
+    throw new Error("Chrome Sync storage quota exceeded");
+  }
+
+  const chunks = chunkString(json, chunkSize);
+  if (chunks.length > quotas.MAX_ITEMS - 5) {
+    throw new Error("Chrome Sync item limit exceeded");
+  }
+
+  // Remove old chunks beyond new length
+  const prevMetaRes = await chrome.storage.sync.get(SYNC_META_KEY);
+  const prevMeta = prevMetaRes[SYNC_META_KEY];
+  if (prevMeta && Number.isFinite(prevMeta.chunkCount) && prevMeta.chunkCount > chunks.length) {
+    const oldKeys = Array.from(
+      { length: prevMeta.chunkCount - chunks.length },
+      (_, i) => `${SYNC_CHUNK_PREFIX}${i + chunks.length}`
+    );
+    await chrome.storage.sync.remove(oldKeys);
+  }
+
+  const payload = {};
+  chunks.forEach((c, i) => {
+    payload[`${SYNC_CHUNK_PREFIX}${i}`] = c;
+  });
+  payload[SYNC_META_KEY] = {
+    v: 1,
+    chunkCount: chunks.length,
+    updatedAt: Date.now(),
+    bytes: jsonBytes,
+    partial,
+    syncedCount: toSync.length,
+    localCount: Array.isArray(repos) ? repos.length : 0
+  };
+
+  await chrome.storage.sync.set(payload);
+  return payload[SYNC_META_KEY];
+}
+
+let syncApplyTimer = null;
+async function applySyncToLocalIfEnabled() {
+  const enabled = await getSyncEnabled();
+  if (!enabled) return;
+
+  const { repos } = await readReposFromSync();
+  if (!repos) return;
+
+  // Write to local storage layer (reuse existing migration logic)
+  // If repos is large, IndexedDB is preferred; otherwise chrome.storage.local.
+  if (repos.length >= 200) {
+    await writeToIndexedDB(repos);
+    await chrome.storage.local.remove(STORAGE_KEY);
+  } else {
+    await writeToChromeStorage(repos);
+  }
+}
+
+async function pushLocalToSync() {
+  const enabled = await getSyncEnabled();
+  if (!enabled) return { enabled: false };
+  const repos = await getAllReposLocalOnly();
+  const meta = await writeReposToSync(repos, { allowPartial: true });
+  return { enabled: true, meta };
+}
+
 // IndexedDB setup
 const DB_NAME = "github-repo-saver";
 const DB_VERSION = 1;
@@ -39,6 +200,9 @@ function validateMessage(message) {
     "CONFIRM_SAVE_REPO",
     "GET_ALL_REPOS",
     "GET_LICENSE_INFO",
+    "GET_SYNC_STATUS",
+    "SET_SYNC_ENABLED",
+    "SYNC_NOW",
     "REMOVE_REPO",
     "UPDATE_REPO"
   ]);
@@ -46,8 +210,12 @@ function validateMessage(message) {
   // Deep validation for repo payloads
   if (message.type === "SAVE_REPO" && !validateRepoPayload(message.repoData)) return false;
   if (message.type === "CONFIRM_SAVE_REPO" && !validateRepoPayload(message.repo)) return false;
-  if (message.type === "UPDATE_REPO" && (typeof message.repoId !== "string" || typeof message.updates !== "object")) return false;
-  if (message.type === "REMOVE_REPO" && typeof message.repoId !== "string") return false;
+  if (message.type === "UPDATE_REPO") {
+    if (typeof message.repoId !== "string" || message.repoId.length === 0) return false;
+    if (!message.updates || typeof message.updates !== "object" || Array.isArray(message.updates)) return false;
+  }
+  if (message.type === "REMOVE_REPO" && (typeof message.repoId !== "string" || message.repoId.length === 0)) return false;
+  if (message.type === "SET_SYNC_ENABLED" && typeof message.enabled !== "boolean") return false;
   return true;
 }
 
@@ -253,13 +421,36 @@ async function migrateToIndexedDB() {
 }
 
 // Get all repos (from IndexedDB or Chrome storage)
-async function getAllRepos() {
+async function getAllReposLocalOnly() {
   const useIndexedDB = await shouldUseIndexedDB();
   if (useIndexedDB) {
     await migrateToIndexedDB();
     return await readFromIndexedDB();
   }
   return await readFromChromeStorage();
+}
+
+// Get all repos (sync-first if enabled; falls back to local)
+async function getAllRepos() {
+  const enabled = await getSyncEnabled();
+  if (enabled) {
+    const { repos } = await readReposFromSync();
+    if (repos) {
+      // Keep local in sync for fast UI reads
+      try {
+        if (repos.length >= 200) {
+          await writeToIndexedDB(repos);
+          await chrome.storage.local.remove(STORAGE_KEY);
+        } else {
+          await writeToChromeStorage(repos);
+        }
+      } catch {
+        // ignore local mirror failures
+      }
+      return repos;
+    }
+  }
+  return await getAllReposLocalOnly();
 }
 
 // Save repo
@@ -280,7 +471,12 @@ async function saveRepo(repo, role = null, customTags = [], note = undefined) {
   const useIndexedDB = await shouldUseIndexedDB();
   if (useIndexedDB) {
     await migrateToIndexedDB();
-    return await addToIndexedDB(repoData);
+    const ok = await addToIndexedDB(repoData);
+    if (ok) {
+      // Best-effort sync push
+      try { await pushLocalToSync(); } catch { /* ignore */ }
+    }
+    return ok;
   } else {
     const repos = await readFromChromeStorage();
     if (repos.some(r => r.id === repoData.id)) {
@@ -291,6 +487,9 @@ async function saveRepo(repo, role = null, customTags = [], note = undefined) {
     if (repos.length >= 200) {
       await migrateToIndexedDB();
     }
+    if (saved) {
+      try { await pushLocalToSync(); } catch { /* ignore */ }
+    }
     return saved;
   }
 }
@@ -300,11 +499,19 @@ async function removeRepo(repoId) {
   const useIndexedDB = await shouldUseIndexedDB();
   if (useIndexedDB) {
     await migrateToIndexedDB();
-    return await removeFromIndexedDB(repoId);
+    const ok = await removeFromIndexedDB(repoId);
+    if (ok) {
+      try { await pushLocalToSync(); } catch { /* ignore */ }
+    }
+    return ok;
   } else {
     const repos = await readFromChromeStorage();
     const filtered = repos.filter(r => r.id !== repoId);
-    return await writeToChromeStorage(filtered);
+    const ok = await writeToChromeStorage(filtered);
+    if (ok) {
+      try { await pushLocalToSync(); } catch { /* ignore */ }
+    }
+    return ok;
   }
 }
 
@@ -313,13 +520,21 @@ async function updateRepo(repoId, updates) {
   const useIndexedDB = await shouldUseIndexedDB();
   if (useIndexedDB) {
     await migrateToIndexedDB();
-    return await updateInIndexedDB(repoId, updates);
+    const ok = await updateInIndexedDB(repoId, updates);
+    if (ok) {
+      try { await pushLocalToSync(); } catch { /* ignore */ }
+    }
+    return ok;
   } else {
     const repos = await readFromChromeStorage();
     const index = repos.findIndex(r => r.id === repoId);
     if (index === -1) return false;
     repos[index] = { ...repos[index], ...updates };
-    return await writeToChromeStorage(repos);
+    const ok = await writeToChromeStorage(repos);
+    if (ok) {
+      try { await pushLocalToSync(); } catch { /* ignore */ }
+    }
+    return ok;
   }
 }
 
@@ -331,7 +546,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function handleMessage(message, sendResponse) {
   if (!validateMessage(message)) {
-    sendResponse({ error: "Invalid message payload" });
+    const t = message && typeof message === "object" ? message.type : null;
+    sendResponse({ error: `Invalid message payload${t ? `: ${t}` : ""}` });
     return;
   }
   try {
@@ -459,6 +675,45 @@ async function handleMessage(message, sendResponse) {
         }
         break;
 
+      case "GET_SYNC_STATUS":
+        try {
+          const enabled = await getSyncEnabled();
+          const { meta } = await readReposFromSync();
+          sendResponse({
+            enabled,
+            meta: meta || null
+          });
+        } catch (e) {
+          sendResponse({ enabled: false, error: String(e) });
+        }
+        break;
+
+      case "SET_SYNC_ENABLED":
+        try {
+          await setSyncEnabled(message.enabled);
+          if (message.enabled) {
+            // Push local -> sync once on enable, then pull back to normalize local mirror
+            const pushRes = await pushLocalToSync();
+            await applySyncToLocalIfEnabled();
+            sendResponse({ success: true, ...pushRes });
+          } else {
+            sendResponse({ success: true, enabled: false });
+          }
+        } catch (e) {
+          sendResponse({ success: false, error: String(e) });
+        }
+        break;
+
+      case "SYNC_NOW":
+        try {
+          const pushRes = await pushLocalToSync();
+          await applySyncToLocalIfEnabled();
+          sendResponse({ success: true, ...pushRes });
+        } catch (e) {
+          sendResponse({ success: false, error: String(e) });
+        }
+        break;
+
       case "GET_LICENSE_INFO":
         // No license system - always free
         const repos = await getAllRepos();
@@ -493,4 +748,24 @@ async function handleMessage(message, sendResponse) {
 // Initialize on install
 chrome.runtime.onInstalled.addListener(async () => {
   await migrateToIndexedDB();
+  // If sync enabled, pull once on install/update
+  try {
+    await applySyncToLocalIfEnabled();
+  } catch {
+    // ignore
+  }
+});
+
+// Listen for sync changes from other devices and update local mirror
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "sync") return;
+  const touched = Object.keys(changes || {});
+  const hasMeta = touched.includes(SYNC_META_KEY);
+  const hasChunk = touched.some(k => k.startsWith(SYNC_CHUNK_PREFIX));
+  if (!hasMeta && !hasChunk) return;
+
+  if (syncApplyTimer) clearTimeout(syncApplyTimer);
+  syncApplyTimer = setTimeout(() => {
+    applySyncToLocalIfEnabled();
+  }, 300);
 });

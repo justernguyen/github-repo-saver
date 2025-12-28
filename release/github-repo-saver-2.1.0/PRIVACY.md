@@ -25,7 +25,7 @@ All data is stored **locally** in your browser using:
 - **IndexedDB**: For repository data (when you have 200+ repos)
 - **Chrome Storage API**: For smaller datasets and preferences
 
-**Optional Sync (across your devices):** If you enable “Sync across devices” in the dashboard, your saved repository list is stored using **Chrome Sync** (`chrome.storage.sync`) and synchronized by your browser across devices signed into the same Chrome profile. This synchronization is handled by Chrome/Google; we do not operate any external servers.
+**Your data never leaves your device.** We do not transmit, sync, or store your data on any external servers.
 
 ## Permissions Explained
 

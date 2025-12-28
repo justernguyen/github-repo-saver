@@ -36,6 +36,72 @@ let activeStatusFilter = "";
 let activeRoleFilter = "";
 let editingRepoId = null;
 
+// -----------------------------
+// Chrome Sync UI
+// -----------------------------
+let syncEnabled = false;
+
+function formatSyncStatus(meta) {
+  if (!meta) return "Sync enabled";
+  const parts = [];
+  if (Number.isFinite(meta.syncedCount)) parts.push(`${meta.syncedCount} synced`);
+  if (meta.partial) parts.push("partial");
+  if (Number.isFinite(meta.updatedAt)) {
+    try {
+      const d = new Date(meta.updatedAt);
+      parts.push(d.toLocaleString(undefined, { month: "2-digit", day: "2-digit", year: "numeric" }));
+      parts.push(d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }));
+    } catch {
+      // ignore
+    }
+  }
+  return parts.join(" • ") || "Sync enabled";
+}
+
+async function refreshSyncStatus() {
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "GET_SYNC_STATUS" });
+    syncEnabled = !!res?.enabled;
+    const btn = document.getElementById("sync-toggle-btn");
+    const label = document.getElementById("sync-toggle-label");
+    const statusWrap = document.getElementById("sync-status");
+    const statusText = document.getElementById("sync-status-text");
+    if (label) label.textContent = syncEnabled ? "On" : "Off";
+    if (btn) btn.dataset.enabled = syncEnabled ? "true" : "false";
+    if (statusWrap && statusText) {
+      if (syncEnabled) {
+        statusWrap.style.display = "flex";
+        statusText.textContent = formatSyncStatus(res?.meta);
+      } else {
+        statusWrap.style.display = "none";
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
+async function toggleSync() {
+  const next = !syncEnabled;
+  const btn = document.getElementById("sync-toggle-btn");
+  if (btn) btn.style.opacity = "0.7";
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "SET_SYNC_ENABLED", enabled: next });
+    if (!res?.success) {
+      showToast(res?.error || "Failed to update Sync setting");
+    } else {
+      showToast(next ? "Sync enabled" : "Sync disabled");
+    }
+  } catch (e) {
+    showToast("Failed to update Sync setting");
+  } finally {
+    if (btn) btn.style.opacity = "1";
+    await refreshSyncStatus();
+    // Reload repos so the UI reflects sync source-of-truth
+    await loadRepos();
+  }
+}
+
 // Simple HTML escape to prevent injection when rendering repo data
 function escapeHTML(str) {
   if (str === null || str === undefined) return "";
@@ -45,6 +111,24 @@ function escapeHTML(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+// Capitalize the first letter for nicer display (does not change stored IDs/URLs)
+function capitalizeFirstLetter(value) {
+  const s = String(value ?? "").trim();
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Format stars (e.g. 2000 -> 2k)
+function formatStars(count) {
+  if (count >= 1000000) {
+    return (count / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+  }
+  if (count >= 1000) {
+    return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return count;
 }
 
 // Load repos
@@ -87,6 +171,7 @@ async function loadRepos() {
       technicalTags: repo.technicalTags || repo.topics || [],
       note: repo.note || "",
       stars: repo.stars || 0,
+      forks: repo.forks || 0,
       updatedAt: repo.updatedAt || repo.savedAt || Date.now()
     }));
 
@@ -183,6 +268,8 @@ function getFilteredRepos() {
         return a.name.localeCompare(b.name);
       case "stars":
         return (b.stars || 0) - (a.stars || 0);
+      case "forks":
+        return (b.forks || 0) - (a.forks || 0);
       case "updated":
         return (b.updatedAt || 0) - (a.updatedAt || 0);
       default:
@@ -205,10 +292,10 @@ function updateStats() {
   const unviewedEl = document.getElementById("unviewed-count");
   const inUseEl = document.getElementById("in-use-count");
 
-  if (totalEl) totalEl.textContent = `${total} repos`;
-  if (filteredEl) filteredEl.textContent = `${filteredCount} showing`;
-  if (unviewedEl) unviewedEl.textContent = `${unviewed} unviewed`;
-  if (inUseEl) inUseEl.textContent = `${inUse} in use`;
+  if (totalEl) totalEl.textContent = String(total);
+  if (filteredEl) filteredEl.textContent = String(filteredCount);
+  if (unviewedEl) unviewedEl.textContent = String(unviewed);
+  if (inUseEl) inUseEl.textContent = String(inUse);
 }
 
 // Update license UI - Simplified for donate model
@@ -263,7 +350,8 @@ function renderRepos() {
     const customTags = repo.customTags || [];
     const technicalTags = repo.technicalTags || repo.topics || [];
     const updatedDate = repo.updatedAt ? new Date(repo.updatedAt).toLocaleDateString() : "N/A";
-    const safeName = escapeHTML(repo.name);
+    const displayName = capitalizeFirstLetter(repo.customName || repo.name);
+    const safeName = escapeHTML(displayName);
     const safeOwner = escapeHTML(repo.owner || "Unknown");
     const safeDesc = escapeHTML(repo.description || "No description provided.");
     const safeUrl = escapeHTML(repo.url || "#");
@@ -290,7 +378,8 @@ function renderRepos() {
             </div>
         
         <div class="repo-meta">
-          <div class="meta-item">⭐ <b>${repo.stars || 0}</b></div>
+          <div class="meta-item">⭐ <b>${formatStars(repo.stars || 0)}</b></div>
+          <div class="meta-item">🍴 <b>${formatStars(repo.forks || 0)}</b></div>
           <div class="meta-item">🗓️ <b>${updatedDate}</b></div>
           ${repo.language ? `<div class="meta-item">🌐 <b>${escapeHTML(repo.language)}</b></div>` : ""}
           </div>
@@ -563,6 +652,14 @@ function attachEventListeners() {
 // Update repo status
 async function updateRepoStatus(repoId, newStatus) {
   try {
+    if (!repoId || typeof repoId !== "string") {
+      showToast("Failed to update status: missing repo ID");
+      return;
+    }
+    if (!newStatus || typeof newStatus !== "string") {
+      showToast("Failed to update status: invalid status");
+      return;
+    }
     await chrome.runtime.sendMessage({
       type: "UPDATE_REPO",
       repoId: repoId,
@@ -691,15 +788,19 @@ function openEditModal(repoId) {
 
 
   // Set values
+  const nameInput = document.getElementById("edit-name");
   const noteInput = document.getElementById("edit-note");
   const descriptionInput = document.getElementById("edit-description");
-  const statusSelect = document.getElementById("edit-status");
 
   console.log("Input elements:", {
+    nameInput: !!nameInput,
     noteInput: !!noteInput,
-    descriptionInput: !!descriptionInput,
-    statusSelect: !!statusSelect
+    descriptionInput: !!descriptionInput
   });
+
+  if (nameInput) {
+    nameInput.value = (repo.customName || repo.name || "");
+  }
 
   if (noteInput) {
     noteInput.value = repo.note || "";
@@ -708,11 +809,6 @@ function openEditModal(repoId) {
 
   if (descriptionInput) {
     descriptionInput.value = repo.description || "";
-
-  }
-
-  if (statusSelect) {
-    statusSelect.value = repo.status || "chuaxem";
 
   }
 
@@ -754,57 +850,99 @@ function openEditModal(repoId) {
 // Render edit tags
 function renderEditTags(tags) {
   const container = document.getElementById("edit-tags-container");
-  container.innerHTML = "";
+  if (!container) return;
 
-  tags.forEach(tag => {
+  // Ensure input exists (keep one input; do not recreate every render)
+  let input = container.querySelector("#edit-tags-input");
+  if (!input) {
+    input = document.createElement("input");
+    input.type = "text";
+    input.className = "tag-input";
+    input.id = "edit-tags-input";
+    input.placeholder = "Type and press Enter...";
+    container.appendChild(input);
+  }
+
+  // Remove existing tag chips but keep the input
+  container.querySelectorAll(".tag-item").forEach(el => el.remove());
+
+  // Render chips before the input
+  const safeTags = (Array.isArray(tags) ? tags : [])
+    .map(t => String(t || "").trim())
+    .filter(Boolean);
+
+  safeTags.forEach(tag => {
     const tagEl = document.createElement("span");
     tagEl.className = "tag-item";
     tagEl.textContent = tag + " ×";
     tagEl.dataset.tag = tag;
-    container.appendChild(tagEl);
+    tagEl.style.cursor = "pointer";
+    tagEl.style.userSelect = "none";
+    container.insertBefore(tagEl, input);
   });
 
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "tag-input";
-  input.id = "edit-tags-input";
-  input.placeholder = "Type and press Enter...";
-  container.appendChild(input);
+  // Attach handlers once (direct input handlers + delegation remove)
+  if (!container.dataset.tagsBound) {
+    container.dataset.tagsBound = "1";
 
-  // Remove tag on click
-  container.querySelectorAll(".tag-item").forEach(item => {
-    item.style.cursor = "pointer";
-    item.style.userSelect = "none";
-    item.onclick = function (e) {
+    // Remove tag on click (delegation)
+    container.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const chip = target.closest(".tag-item");
+      if (!chip) return;
       e.preventDefault();
       e.stopPropagation();
-      const tagToRemove = this.dataset.tag;
-
-      // Get current tags from DOM
+      const tagToRemove = chip.dataset.tag;
       const currentTags = Array.from(container.querySelectorAll(".tag-item"))
-        .map(el => el.dataset.tag)
-        .filter(tag => tag);
-      const newTags = currentTags.filter(t => t !== tagToRemove);
-      renderEditTags(newTags);
-    };
-  });
+        .map(el => (el.dataset.tag || "").trim())
+        .filter(Boolean);
+      const next = currentTags.filter(t => t !== tagToRemove);
+      renderEditTags(next);
+    });
+  }
 
-  // Add tag on Enter
-  input.onkeydown = function (e) {
-    if (e.key === "Enter" && this.value.trim()) {
-      e.preventDefault();
-      const newTag = this.value.trim();
-      // Get current tags from DOM
+  // Bind input events once (some environments don't bubble keydown reliably)
+  if (!input.dataset.bound) {
+    input.dataset.bound = "1";
+
+    const commitValue = () => {
+      const raw = input.value || "";
+      const parts = raw
+        .split(/[,\n]/g)
+        .map(s => s.trim())
+        .filter(Boolean);
+      if (parts.length === 0) return;
+
       const currentTags = Array.from(container.querySelectorAll(".tag-item"))
-        .map(el => el.dataset.tag)
-        .filter(tag => tag);
-      if (!currentTags.includes(newTag)) {
-        const updatedTags = [...currentTags, newTag];
-        renderEditTags(updatedTags);
-        this.value = ""; // Clear input
+        .map(el => (el.dataset.tag || "").trim())
+        .filter(Boolean);
+
+      const next = [...currentTags];
+      for (const p of parts) {
+        if (!next.includes(p)) next.push(p);
       }
-    }
-  };
+      input.value = "";
+      renderEditTags(next);
+    };
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        commitValue();
+      }
+    });
+
+    // If user clicks away with text still present, commit it
+    input.addEventListener("blur", () => {
+      commitValue();
+    });
+  }
+
+  // Keep focus for better UX
+  setTimeout(() => {
+    try { input.focus(); } catch { /* ignore */ }
+  }, 0);
 }
 
 // Close edit modal
@@ -834,22 +972,24 @@ async function saveEdit() {
 
 
 
+  const nameInput = document.getElementById("edit-name");
   const noteInput = document.getElementById("edit-note");
   const descriptionInput = document.getElementById("edit-description");
-  const statusSelect = document.getElementById("edit-status");
   const tagsContainer = document.getElementById("edit-tags-container");
 
+  const customNameRaw = nameInput ? nameInput.value.trim() : "";
   const note = noteInput ? noteInput.value.trim() : "";
   const description = descriptionInput ? descriptionInput.value.trim() : "";
-  const status = statusSelect ? statusSelect.value : "chuaxem";
   const customTags = tagsContainer ? Array.from(tagsContainer.querySelectorAll(".tag-item"))
-    .map(el => el.dataset.tag)
-    .filter(tag => tag) : [];
+    .map(el => String(el.dataset.tag || "").trim())
+    .filter(Boolean) : [];
 
   const updates = {
-    status,
-    customTags
+    customTags: Array.from(new Set(customTags))
   };
+
+  if (customNameRaw) updates.customName = customNameRaw;
+  else updates.customName = undefined;
 
   if (note) updates.note = note;
   else updates.note = undefined;
@@ -1306,6 +1446,15 @@ function initializeDashboard() {
 
 
       setupExportImport();
+
+      // Sync toggle
+      const syncBtn = document.getElementById("sync-toggle-btn");
+      if (syncBtn) {
+        syncBtn.addEventListener("click", () => {
+          toggleSync();
+        });
+      }
+      refreshSyncStatus();
 
 
       loadRepos().then(() => {

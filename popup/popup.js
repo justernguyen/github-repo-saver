@@ -14,6 +14,12 @@ function escapeHTML(str) {
     .replace(/'/g, "&#039;");
 }
 
+function capitalizeFirstLetter(value) {
+  const s = String(value ?? "").trim();
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 // Resize standalone popup window (opened via ?popup=window) to fit content
 function isStandaloneSaveWindow() {
   try {
@@ -276,7 +282,7 @@ function renderReposList(repos) {
 
   return recent.map(repo => `
     <div class="recent-repo-item-simple" data-url="${escapeHTML(repo.url)}">
-      <div class="repo-item-name">${escapeHTML(repo.name)}</div>
+      <div class="repo-item-name">${escapeHTML(capitalizeFirstLetter(repo.customName || repo.name))}</div>
       <div class="repo-item-desc">
         ${escapeHTML(repo.description || "No description")}
       </div>
@@ -389,7 +395,7 @@ function displayRepoInfo() {
   const repoNameContainer = document.getElementById("repo-name-container");
   if (!repoNameContainer || !pendingRepo) return;
 
-  repoNameContainer.textContent = pendingRepo.name || "";
+  repoNameContainer.textContent = capitalizeFirstLetter(pendingRepo.customName || pendingRepo.name || "");
 
   // Pre-fill description input with default description
   const descriptionInput = document.getElementById("description-input");

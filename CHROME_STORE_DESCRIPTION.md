@@ -73,7 +73,8 @@ Save, organize, and manage your favorite GitHub repositories with a beautiful mo
 
 ### 🔐 Privacy & Security
 
-- ✅ All data stored locally (no cloud sync)
+- ✅ Local-first storage (IndexedDB / Chrome Storage)
+- ✅ Optional “Sync across devices” using Chrome Sync (subject to Chrome Sync quotas)
 - ✅ No external API calls
 - ✅ No tracking or analytics
 - ✅ Open-source and transparent
@@ -87,7 +88,7 @@ With thousands of amazing repositories on GitHub, it's easy to lose track of the
 - **Better Organization**: Categorize and tag repos your way
 - **Status Tracking**: Know which repos you've tried, are using, or dropped
 - **Beautiful Interface**: Enjoy a modern, developer-friendly UI
-- **Privacy**: Your data stays on your device, always
+- **Privacy**: Your data stays on your device, alw
 
 ### 💝 Support the Project
 

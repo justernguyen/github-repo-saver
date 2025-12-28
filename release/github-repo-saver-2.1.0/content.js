@@ -37,34 +37,68 @@ function extractRepoInfo() {
     const languageEl = document.querySelector('h2[class*="language-color"], span[itemprop="programmingLanguage"]');
     const language = languageEl?.textContent?.trim() || null;
 
-    // Get stars count - try multiple selectors
-    let stars = 0;
-    // Try social count selector
-    const socialCount = document.querySelector('a[href$="/stargazers"] .social-count');
-    if (socialCount) {
-      const starText = socialCount.textContent?.trim() || "0";
-      stars = parseInt(starText.replace(/,/g, "")) || 0;
+    // Helper to parse GitHub numbers (handles 'k' and 'm' suffixes)
+    function parseGitHubNumber(text) {
+      if (!text) return 0;
+      const cleanText = text.replace(/,/g, "").trim().toLowerCase();
+      if (cleanText.endsWith('k')) {
+        return Math.round(parseFloat(cleanText.slice(0, -1)) * 1000);
+      }
+      if (cleanText.endsWith('m')) {
+        return Math.round(parseFloat(cleanText.slice(0, -1)) * 1000000);
+      }
+      return parseInt(cleanText) || 0;
     }
-    // Try aria-label on button
+
+    // Get stars count - improved selectors
+    let stars = 0;
+    // Try ID selector first (most reliable)
+    let starElement = document.querySelector('#repo-stars-counter-star');
+    if (starElement) {
+      stars = parseGitHubNumber(starElement.textContent);
+    }
+    // Try social count
     if (stars === 0) {
-      const starButton = document.querySelector('button[aria-label*="star"], a[href$="/stargazers"]');
+      starElement = document.querySelector('a[href$="/stargazers"] #repo-stars-counter-star');
+      if (starElement) {
+        stars = parseGitHubNumber(starElement.textContent);
+      }
+    }
+    // Try aria-label as fallback
+    if (stars === 0) {
+      const starButton = document.querySelector('a[href$="/stargazers"]');
       if (starButton) {
         const ariaLabel = starButton.getAttribute("aria-label") || "";
-        const match = ariaLabel.match(/(\d+(?:,\d+)*)\s+star/i);
+        const match = ariaLabel.match(/([\d\.,]+[km]?)\s+star/i);
         if (match) {
-          stars = parseInt(match[1].replace(/,/g, "")) || 0;
-        } else {
-          const starText = starButton.textContent?.trim() || "0";
-          stars = parseInt(starText.replace(/,/g, "")) || 0;
+          stars = parseGitHubNumber(match[1]);
         }
       }
     }
-    // Try direct text content
-    if (stars === 0) {
-      const starLink = document.querySelector('a[href$="/stargazers"]');
-      if (starLink) {
-        const starText = starLink.textContent?.trim() || "0";
-        stars = parseInt(starText.replace(/,/g, "").replace(/\s+/g, "")) || 0;
+
+    // Get forks count - improved selectors
+    let forks = 0;
+    // Try ID selector first (most reliable)
+    let forkElement = document.querySelector('#repo-network-counter');
+    if (forkElement) {
+      forks = parseGitHubNumber(forkElement.textContent);
+    }
+    // Try href-based selector
+    if (forks === 0) {
+      forkElement = document.querySelector('a[href$="/forks"] #repo-network-counter, a[href*="/network/members"] #repo-network-counter');
+      if (forkElement) {
+        forks = parseGitHubNumber(forkElement.textContent);
+      }
+    }
+    // Try aria-label as fallback
+    if (forks === 0) {
+      const forkButton = document.querySelector('a[href$="/forks"], a[href*="/network/members"]');
+      if (forkButton) {
+        const ariaLabel = forkButton.getAttribute("aria-label") || "";
+        const match = ariaLabel.match(/([\d\.,]+[km]?)\s+fork/i);
+        if (match) {
+          forks = parseGitHubNumber(match[1]);
+        }
       }
     }
 
@@ -111,6 +145,7 @@ function extractRepoInfo() {
       language: language,
       topics: topics,
       stars: stars,
+      forks: forks,
       updatedAt: updatedAt,
       url: url
     };

@@ -47,6 +47,17 @@ function escapeHTML(str) {
     .replace(/'/g, "&#039;");
 }
 
+// Format stars (e.g. 2000 -> 2k)
+function formatStars(count) {
+  if (count >= 1000000) {
+    return (count / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+  }
+  if (count >= 1000) {
+    return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return count;
+}
+
 // Load repos
 async function loadRepos() {
   try {
@@ -87,6 +98,7 @@ async function loadRepos() {
       technicalTags: repo.technicalTags || repo.topics || [],
       note: repo.note || "",
       stars: repo.stars || 0,
+      forks: repo.forks || 0,
       updatedAt: repo.updatedAt || repo.savedAt || Date.now()
     }));
 
@@ -183,6 +195,8 @@ function getFilteredRepos() {
         return a.name.localeCompare(b.name);
       case "stars":
         return (b.stars || 0) - (a.stars || 0);
+      case "forks":
+        return (b.forks || 0) - (a.forks || 0);
       case "updated":
         return (b.updatedAt || 0) - (a.updatedAt || 0);
       default:
@@ -290,7 +304,8 @@ function renderRepos() {
             </div>
         
         <div class="repo-meta">
-          <div class="meta-item">⭐ <b>${repo.stars || 0}</b></div>
+          <div class="meta-item">⭐ <b>${formatStars(repo.stars || 0)}</b></div>
+          <div class="meta-item">🍴 <b>${formatStars(repo.forks || 0)}</b></div>
           <div class="meta-item">🗓️ <b>${updatedDate}</b></div>
           ${repo.language ? `<div class="meta-item">🌐 <b>${escapeHTML(repo.language)}</b></div>` : ""}
           </div>

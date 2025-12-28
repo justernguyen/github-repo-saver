@@ -25,7 +25,14 @@ All data is stored **locally** in your browser using:
 - **IndexedDB**: For repository data (when you have 200+ repos)
 - **Chrome Storage API**: For smaller datasets and preferences
 
-**Optional Sync (across your devices):** If you enable “Sync across devices” in the dashboard, your saved repository list is stored using **Chrome Sync** (`chrome.storage.sync`) and synchronized by your browser across devices signed into the same Chrome profile. This synchronization is handled by Chrome/Google; we do not operate any external servers.
+**Optional Sync (across your devices):** If you enable "Sync across devices" in the dashboard, your saved repository list is stored using **Chrome Sync** (`chrome.storage.sync`) and synchronized by your browser across devices signed into the same Chrome profile. This synchronization is handled by Chrome/Google; we do not operate any external servers.
+
+**Important notes about Chrome Sync:**
+- Chrome Sync has storage limits (approximately 100KB total)
+- If your repository collection exceeds this limit, only the most recently saved repositories will be synced (partial sync)
+- Sync data is encrypted by Chrome and stored on Google's servers as part of your Chrome profile
+- You can disable sync at any time in the dashboard, which will stop syncing but will not delete already synced data from Chrome Sync
+- To fully remove synced data, you must clear Chrome Sync data in Chrome settings
 
 ## Permissions Explained
 
@@ -42,6 +49,11 @@ All data is stored **locally** in your browser using:
 You can delete your data at any time by:
 1. Removing individual repositories in the dashboard
 2. Uninstalling the extension (this removes all local data)
+
+**If Chrome Sync is enabled:**
+- Disabling sync in the dashboard stops future syncing but does not delete already synced data
+- To remove synced data from Chrome Sync, you must clear Chrome Sync data in Chrome settings (chrome://settings/syncSetup)
+- Local data deletion (removing repos or uninstalling) does not automatically delete synced data
 
 ## Contact
 

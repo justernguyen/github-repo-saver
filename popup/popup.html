@@ -47,7 +47,8 @@
 
     html,
     body {
-      width: 380px;
+      width: 450px;
+      max-width: 450px;
       min-height: 200px;
       max-height: 600px;
       height: auto !important;
@@ -56,9 +57,11 @@
       color: #E4E7EB;
       padding: 0;
       margin: 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      box-sizing: border-box;
     }
 
     /* Remove all extra spacing - ensure no flex-grow and no extra margins */
@@ -66,9 +69,9 @@
       flex-grow: 0;
       margin-bottom: 0;
     }
-    
+
     /* Ensure last child has no bottom margin/padding */
-    body > *:last-child {
+    body>*:last-child {
       margin-bottom: 0 !important;
       padding-bottom: 0 !important;
     }
@@ -83,6 +86,8 @@
       align-items: center;
       gap: 12px;
       margin-bottom: 0;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .header-title {
@@ -101,7 +106,7 @@
       margin-bottom: 0;
       line-height: 1.2;
     }
-    
+
     .header-content {
       display: flex;
       flex-direction: column;
@@ -111,7 +116,7 @@
     }
 
     .content {
-      padding: 8px 16px 10px 16px;
+      padding: 8px 14px 10px 14px;
       flex: 0 0 auto;
       overflow-y: auto;
       overflow-x: hidden;
@@ -121,6 +126,9 @@
       height: auto;
       max-height: none;
       margin-top: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .repo-info {
@@ -131,6 +139,9 @@
       margin-bottom: 0;
       display: flex;
       flex-direction: column;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .repo-name {
@@ -150,6 +161,9 @@
       margin-top: 10px;
       flex-shrink: 0;
       flex-grow: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     #repo-name-container {
@@ -168,6 +182,9 @@
       flex-grow: 0;
       margin-top: 4px;
       margin-bottom: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .role-label {
@@ -180,9 +197,14 @@
 
     .role-options {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 4px;
       grid-auto-rows: min-content;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
     }
 
     .role-option {
@@ -197,6 +219,10 @@
       cursor: pointer;
       transition: all 0.15s;
       text-align: center;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .role-option:hover {
@@ -242,6 +268,8 @@
       flex-grow: 0;
       margin: 0;
       margin-bottom: 0;
+      width: 100%;
+      box-sizing: border-box;
     }
 
 
@@ -502,6 +530,8 @@
       flex-grow: 0;
       gap: 0;
       margin: 0;
+      width: 100%;
+      box-sizing: border-box;
       padding-bottom: 0;
     }
 
@@ -1092,7 +1122,7 @@
           Quick & secure payment via Ko-fi
         </p>
         <p style="font-size: 10px; color: #64748B; margin-top: 8px; text-align: center;">
-          <a href="https://raw.githubusercontent.com/dacthinh05/github-repo-saver/main/PRIVACY.md" target="_blank"
+          <a href="https://github.com/justernguyen/github-repo-saver/blob/main/PRIVACY.md" target="_blank"
             style="color: #818CF8; text-decoration: none;">🔒 Privacy Policy</a>
         </p>
       </div>

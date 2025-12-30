@@ -197,6 +197,7 @@ function validateMessage(message) {
     "CLEAR_BADGE",
     "CLEAR_PENDING_REPO",
     "GET_PENDING_REPO",
+    "RESTORE_REPO",
     "CONFIRM_SAVE_REPO",
     "GET_ALL_REPOS",
     "GET_LICENSE_INFO",
@@ -216,6 +217,9 @@ function validateMessage(message) {
   }
   if (message.type === "REMOVE_REPO" && (typeof message.repoId !== "string" || message.repoId.length === 0)) return false;
   if (message.type === "SET_SYNC_ENABLED" && typeof message.enabled !== "boolean") return false;
+  if (message.type === "RESTORE_REPO") {
+    if (!message.repo || typeof message.repo !== "object" || !message.repo.id) return false;
+  }
   return true;
 }
 
@@ -517,10 +521,16 @@ async function removeRepo(repoId) {
 
 // Update repo
 async function updateRepo(repoId, updates) {
+  // Always bump updatedAt for "recent activity" features (dashboard sorting, etc.)
+  const updatesWithTimestamp =
+    updates && typeof updates === "object"
+      ? { ...updates, updatedAt: Date.now() }
+      : { updatedAt: Date.now() };
+
   const useIndexedDB = await shouldUseIndexedDB();
   if (useIndexedDB) {
     await migrateToIndexedDB();
-    const ok = await updateInIndexedDB(repoId, updates);
+    const ok = await updateInIndexedDB(repoId, updatesWithTimestamp);
     if (ok) {
       try { await pushLocalToSync(); } catch { /* ignore */ }
     }
@@ -529,7 +539,7 @@ async function updateRepo(repoId, updates) {
     const repos = await readFromChromeStorage();
     const index = repos.findIndex(r => r.id === repoId);
     if (index === -1) return false;
-    repos[index] = { ...repos[index], ...updates };
+    repos[index] = { ...repos[index], ...updatesWithTimestamp };
     const ok = await writeToChromeStorage(repos);
     if (ok) {
       try { await pushLocalToSync(); } catch { /* ignore */ }
@@ -573,7 +583,7 @@ async function handleMessage(message, sendResponse) {
             chrome.windows.create({
               url: popupUrl,
               type: "popup",
-              width: 400,
+              width: 470,
               height: 480, // Smaller default; popup auto-fits via window.resizeTo in popup.js
               focused: true
             }, (window) => {
@@ -585,7 +595,7 @@ async function handleMessage(message, sendResponse) {
           }
 
           // Tính toán vị trí: góc phải, cách top một chút
-          const popupWidth = 400;
+          const popupWidth = 470;
           const popupHeight = 480; // Smaller default; popup auto-fits via window.resizeTo in popup.js
           const left = (currentWindow.left || 0) + (currentWindow.width || 1920) - popupWidth - 20;
           const top = (currentWindow.top || 0) + 60; // Dịch lên trên một chút
@@ -637,6 +647,29 @@ async function handleMessage(message, sendResponse) {
         sendResponse({ repo: pendingRepo || null });
         break;
 
+      case "RESTORE_REPO":
+        const repoToRestore = message.repo;
+        if (!repoToRestore || !repoToRestore.id) {
+          sendResponse({ error: "Invalid repo data" });
+          break;
+        }
+
+        const useIDB = await shouldUseIndexedDB();
+        if (useIDB) {
+          await migrateToIndexedDB();
+          await addToIndexedDB(repoToRestore);
+          try { await pushLocalToSync(); } catch { }
+        } else {
+          const repos = await readFromChromeStorage();
+          const idx = repos.findIndex(r => r.id === repoToRestore.id);
+          if (idx !== -1) repos[idx] = repoToRestore;
+          else repos.push(repoToRestore);
+          await writeToChromeStorage(repos);
+          try { await pushLocalToSync(); } catch { }
+        }
+        sendResponse({ success: true });
+        break;
+
       case "CONFIRM_SAVE_REPO":
         const allRepos = await getAllRepos();
         const repoId = message.repo.id || `${message.repo.owner}/${message.repo.name}`.toLowerCase();
@@ -661,6 +694,7 @@ async function handleMessage(message, sendResponse) {
         await chrome.storage.local.remove("pendingRepo");
         sendResponse({ success: true });
         break;
+
 
       case "GET_ALL_REPOS":
         try {
@@ -690,6 +724,19 @@ async function handleMessage(message, sendResponse) {
 
       case "SET_SYNC_ENABLED":
         try {
+          // Auto-backup before sync
+          if (message.enabled) {
+            const repos = await getAllReposLocalOnly();
+            const backupData = {
+              repos: repos,
+              timestamp: Date.now(),
+              version: "2.1.0"
+            };
+            await chrome.storage.local.set({
+              "github-repo-saver-backup": JSON.stringify(backupData)
+            });
+          }
+
           await setSyncEnabled(message.enabled);
           if (message.enabled) {
             // Push local -> sync once on enable, then pull back to normalize local mirror
@@ -706,6 +753,17 @@ async function handleMessage(message, sendResponse) {
 
       case "SYNC_NOW":
         try {
+          // Auto-backup before sync
+          const repos = await getAllReposLocalOnly();
+          const backupData = {
+            repos: repos,
+            timestamp: Date.now(),
+            version: "2.1.0"
+          };
+          await chrome.storage.local.set({
+            "github-repo-saver-backup": JSON.stringify(backupData)
+          });
+
           const pushRes = await pushLocalToSync();
           await applySyncToLocalIfEnabled();
           sendResponse({ success: true, ...pushRes });

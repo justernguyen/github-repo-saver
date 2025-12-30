@@ -158,6 +158,15 @@
       user-select: none;
     }
 
+    /* Compact buttons in bulk bar */
+    .bulk-bar .stat-card.button {
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     /* Sync toggle looks like a professional pill */
     #sync-toggle-btn {
       border-color: rgba(99, 102, 241, 0.35);
@@ -176,6 +185,7 @@
     }
 
     #sync-status {
+      display: none !important;
       font-size: 11.5px;
       font-weight: 600;
       color: #94A3B8;
@@ -289,27 +299,33 @@
 
     .filter-row {
       display: flex;
-      gap: 12px;
+      gap: 6px;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
+    }
+
+    #select-mode-btn {
+      flex-shrink: 0 !important;
+      white-space: nowrap;
     }
 
     .filter-label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-right: 4px;
+      margin-right: 2px;
     }
 
     .filter-btn {
-      padding: 8px 16px;
+      padding: 6px 12px;
       background: var(--bg-input);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
@@ -327,14 +343,232 @@
     }
 
     .filter-select {
-      padding: 8px 16px;
+      padding: 6px 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      min-width: 120px;
+    }
+
+    /* Highlight for search matches */
+    mark.hl {
+      background: rgba(251, 191, 36, 0.18);
+      color: var(--text-main);
+      padding: 0 2px;
+      border-radius: 4px;
+      border: 1px solid rgba(251, 191, 36, 0.25);
+    }
+
+    /* Collection chip + pin */
+    .collection-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      background: rgba(99, 102, 241, 0.08);
+      color: #CBD5E1;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .pin-btn {
+      width: 28px;
+      height: 26px;
+      min-width: 28px;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.35);
+      color: var(--text-main);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+      transition: all 0.2s;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .pin-btn:hover {
+      border-color: rgba(251, 191, 36, 0.45);
+      background: rgba(251, 191, 36, 0.10);
+    }
+
+    .pin-btn[data-pinned="true"] {
+      border-color: rgba(251, 191, 36, 0.55);
+      background: rgba(251, 191, 36, 0.14);
+      color: #FDE68A;
+    }
+
+    /* Bulk selection */
+    .bulk-bar {
+      display: none !important;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      background: rgba(18, 24, 38, 0.7);
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bulk-bar.show {
+      display: flex !important;
+    }
+
+    .bulk-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .bulk-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .bulk-bar-preview-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(99, 102, 241, 0.15);
+      margin-top: 4px;
+    }
+
+    .bulk-apply-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .bulk-apply-btn:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .bulk-apply-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .bulk-cancel-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(30, 41, 59, 0.8);
+      color: #CBD5E1;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .bulk-cancel-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(148, 163, 184, 0.5);
+      color: #F1F5F9;
+    }
+
+    .bulk-cancel-btn:active {
+      background: rgba(30, 41, 59, 1);
+    }
+
+    .bulk-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.35);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .bulk-preview {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.08);
+      color: #FDE68A;
+      font-size: 12px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bulk-preview-text {
+      color: #FDE68A;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .bulk-input {
+      padding: 6px 10px;
       background: var(--bg-input);
       border: 1px solid var(--border);
       border-radius: 8px;
-      color: var(--text-muted);
-      font-size: 13px;
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 100px;
+      max-width: 150px;
+      flex-shrink: 0;
+    }
+
+    .bulk-bar .filter-select {
+      padding: 6px 10px;
+      font-size: 11px;
+      min-width: 120px;
+      max-width: 150px;
+      flex-shrink: 0;
+    }
+
+    .bulk-bar .filter-label {
+      font-size: 10px;
+      margin-right: 2px;
+      flex-shrink: 0;
+    }
+
+    .select-checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: #6366F1;
       cursor: pointer;
-      min-width: 140px;
     }
 
     /* Repo Grid & Cards */
@@ -356,6 +590,15 @@
       overflow: hidden;
       min-height: 320px;
       /* Đảm bảo chiều cao tối thiểu đồng đều */
+    }
+
+    /* When bulk mode is active, make cards clickable */
+    body.bulk-mode-active .repo-card {
+      cursor: pointer;
+    }
+
+    body.bulk-mode-active .repo-card:hover {
+      background: rgba(99, 102, 241, 0.1);
     }
 
     .repo-card:hover {
@@ -381,17 +624,37 @@
     }
 
     .repo-header {
+      margin-bottom: 16px;
+    }
+
+    .repo-header-top {
       display: flex;
       justify-content: space-between;
-      align-items: start;
-      margin-bottom: 16px;
+      align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .repo-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .repo-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .repo-name {
       font-size: 20px;
       font-weight: 700;
       line-height: 1.2;
+      margin: 0;
     }
 
     .repo-name a {
@@ -403,6 +666,7 @@
     .repo-name a:hover {
       color: var(--accent);
     }
+
 
     .repo-badges {
       display: flex;
@@ -419,9 +683,64 @@
     }
 
     .role-badge {
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--accent);
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .role-badge[data-role="ui-frontend"] {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%);
+      color: #C4B5FD;
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+
+    .role-badge[data-role="backend-api"] {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+      color: #93C5FD;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .role-badge[data-role="auth"] {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+      color: #6EE7B7;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .role-badge[data-role="payments"] {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+      color: #FCD34D;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .role-badge[data-role="ai-ml"] {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(219, 39, 119, 0.1) 100%);
+      color: #F9A8D4;
+      border-color: rgba(236, 72, 153, 0.4);
+    }
+
+    .role-badge[data-role="infra-tooling"] {
+      background: linear-gradient(135deg, rgba(107, 114, 128, 0.15) 0%, rgba(75, 85, 99, 0.1) 100%);
+      color: #D1D5DB;
+      border-color: rgba(107, 114, 128, 0.4);
+    }
+
+    .role-badge[data-role="other"] {
+      background: linear-gradient(135deg, rgba(156, 163, 175, 0.15) 0%, rgba(107, 114, 128, 0.1) 100%);
+      color: #E5E7EB;
+      border-color: rgba(156, 163, 175, 0.4);
+    }
+
+    .role-badge[data-role="__null__"],
+    .role-badge[data-role=""] {
+      background: linear-gradient(135deg, rgba(75, 85, 99, 0.15) 0%, rgba(55, 65, 81, 0.1) 100%);
+      color: #9CA3AF;
+      border-color: rgba(75, 85, 99, 0.4);
     }
 
     .status-badge {
@@ -636,6 +955,459 @@
       max-width: 550px;
       width: 100%;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    /* Keyboard Navigation */
+    .repo-card.keyboard-selected {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Quick Actions Menu */
+    .quick-actions-menu {
+      position: fixed;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      z-index: 10001;
+      min-width: 180px;
+      display: none;
+    }
+
+    .menu-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .menu-item:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--accent);
+    }
+
+    /* Statistics Modal - Modern Design */
+    .stats-modal {
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .stats-content {
+      margin-top: 24px;
+    }
+
+    .stats-grid-modern {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card-modern {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-card-modern::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .stat-card-modern:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card-modern:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.1);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .stat-card-primary {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(79, 70, 229, 0.12) 100%);
+      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+    }
+
+    .stat-card-primary:hover {
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.2);
+    }
+
+    .stat-card-success {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.12) 100%);
+      border-color: rgba(16, 185, 129, 0.35);
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+    }
+
+    .stat-card-success:hover {
+      box-shadow: 0 12px 40px rgba(16, 185, 129, 0.35), 0 0 0 1px rgba(16, 185, 129, 0.2);
+    }
+
+    .stat-card-info {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(37, 99, 235, 0.12) 100%);
+      border-color: rgba(59, 130, 246, 0.35);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    }
+
+    .stat-card-info:hover {
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.35), 0 0 0 1px rgba(59, 130, 246, 0.2);
+    }
+
+    .stat-card-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.12) 100%);
+      border-color: rgba(245, 158, 11, 0.35);
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+    }
+
+    .stat-card-warning:hover {
+      box-shadow: 0 12px 40px rgba(245, 158, 11, 0.35), 0 0 0 1px rgba(245, 158, 11, 0.2);
+    }
+
+    .stat-icon {
+      font-size: 48px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+      transition: transform 0.4s ease;
+      flex-shrink: 0;
+    }
+
+    .stat-card-modern:hover .stat-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .stat-info {
+      flex: 1;
+    }
+
+    .stat-value-modern {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E0E7FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-label-modern {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .pie-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 32px;
+      margin-top: 32px;
+      justify-items: center;
+    }
+
+    .stats-chart-section {
+      margin-bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-chart-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .stats-chart-section:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .stats-chart-section:hover::before {
+      opacity: 1;
+    }
+
+    .chart-title {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E0E7FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align: center;
+      letter-spacing: -0.01em;
+    }
+
+    /* Pie Chart */
+    .pie-chart-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pie-chart-wrapper {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+    }
+
+    .pie-chart {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      box-shadow:
+        0 0 0 4px rgba(255, 255, 255, 0.05),
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 0 40px rgba(0, 0, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: pieChartAppear 0.8s ease-out;
+    }
+
+    @keyframes pieChartAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.8) rotate(-180deg);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    .pie-chart:hover {
+      transform: scale(1.08) rotate(5deg);
+      box-shadow:
+        0 0 0 4px rgba(255, 255, 255, 0.08),
+        0 12px 48px rgba(0, 0, 0, 0.5),
+        inset 0 0 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .pie-chart-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      height: 140px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.3),
+        inset 0 2px 8px rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
+    }
+
+    .pie-chart-wrapper:hover .pie-chart-center {
+      transform: translate(-50%, -50%) scale(1.05);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .pie-center-value {
+      font-size: 36px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E0E7FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .pie-center-label {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-top: 6px;
+      font-weight: 700;
+    }
+
+    /* Pie Chart Labels */
+    .pie-label {
+      position: absolute;
+      pointer-events: none;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .pie-label-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        0 0 8px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .pie-label-value {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        0 0 8px rgba(0, 0, 0, 0.3);
+      white-space: nowrap;
+    }
+
+    .pie-legend {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .pie-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pie-legend-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: currentColor;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .pie-legend-item:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(6px) scale(1.02);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .pie-legend-item:hover::before {
+      opacity: 1;
+    }
+
+    .pie-legend-color {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        0 0 0 2px rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .pie-legend-item:hover .pie-legend-color {
+      transform: scale(1.15) rotate(5deg);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 0 0 3px rgba(255, 255, 255, 0.15);
+    }
+
+    .pie-legend-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .pie-legend-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .pie-legend-details {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 600;
     }
 
     .form-group {
@@ -803,7 +1575,130 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
     }
+
+    /* Bulk Actions Bar */
+    /* Old bulk-bar CSS - removed to avoid conflicts */
+    /*
+    .bulk-bar {
+      position: fixed;
+      bottom: -100px;
+      left: 0;
+      width: 100%;
+      background: var(--bg-card);
+      border-top: 1px solid var(--primary);
+      padding: 16px 24px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      transition: bottom 0.3s ease;
+      display: flex;
+      justify-content: center;
+    }
+
+    .bulk-bar.show {
+      bottom: 0;
+    }
+
+    .bulk-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1200px;
+      gap: 20px;
+    }
+
+    .bulk-left,
+    .bulk-center,
+    .bulk-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bulk-center {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .bulk-count-badge {
+      background: var(--primary);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .bulk-text-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: underline;
+    }
+
+    .bulk-select,
+    .bulk-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .bulk-select {
+      min-width: 120px;
+    }
+
+    .bulk-input {
+      min-width: 150px;
+    }
+
+    .bulk-icon-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .bulk-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .bulk-icon-btn.danger:hover {
+      background: rgba(220, 38, 38, 0.2);
+    }
+
+    .bulk-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .bulk-preview {
+      display: none;
+      background: rgba(99, 102, 241, 0.1);
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      align-items: center;
+    }
+
+    .bulk-preview-text {
+      font-size: 13px;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
   </style>
+  <script src="./utils.js"></script>
   <script src="./dashboard.js"></script>
 </head>
 
@@ -821,17 +1716,15 @@
           <div class="stat-card">🌑 <b id="unviewed-count">0</b> <span class="stat-label">Unviewed</span></div>
           <div class="stat-card">🚀 <b id="in-use-count">0</b> <span class="stat-label">In use</span></div>
         </div>
-        <div class="stats-row">
+        <div class="actions-row">
+          <button type="button" class="stat-card button export-btn" id="export-btn">📤 Export</button>
+          <button type="button" class="stat-card button import-btn" id="import-btn">📥 Import</button>
           <button type="button" class="stat-card button" id="sync-toggle-btn" data-enabled="false">
             Sync <b id="sync-toggle-label">Off</b>
           </button>
           <div class="stat-card" id="sync-status" style="display: none;">
             <span id="sync-status-text">Sync status</span>
           </div>
-        </div>
-        <div class="actions-row">
-          <button type="button" class="stat-card button export-btn" id="export-btn">📤 Export</button>
-          <button type="button" class="stat-card button import-btn" id="import-btn">📥 Import</button>
           <button type="button" class="stat-card button rate-btn" id="rate-btn">Rate 5 Stars</button>
         </div>
       </div>
@@ -850,6 +1743,7 @@
           <option value="stars">Most stars</option>
           <option value="forks">Most forks</option>
           <option value="updated">Recently updated</option>
+          <option value="recent">Recently opened</option>
         </select>
       </div>
 
@@ -857,19 +1751,17 @@
         <span class="filter-label">Quick Filters:</span>
         <button type="button" class="filter-btn active" data-filter="all">All Repos</button>
 
-        <div style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
+        <div style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
 
-        <span class="filter-label">Status:</span>
+        <span class="filter-label">📋 Status:</span>
         <select id="status-filter" class="filter-select">
           <option value="">📋 All Status</option>
-          <option value="chuaxem">Unviewed</option>
-          <option value="daxem">Viewed</option>
-          <option value="dathu">Tried</option>
-          <option value="dangdung">In Use</option>
-          <option value="bo">Dropped</option>
+          <option value="chuaxem">🌑 Unviewed</option>
+          <option value="daxem">👁️ Viewed</option>
+          <option value="dangdung">🚀 In Use</option>
         </select>
 
-        <span class="filter-label" style="margin-left: 12px;">Role:</span>
+        <span class="filter-label">Role:</span>
         <select id="role-filter" class="filter-select">
           <option value="">🎯 All Roles</option>
           <option value="ui-frontend">🎨 UI / Frontend</option>
@@ -881,6 +1773,66 @@
           <option value="other">📦 Other</option>
           <option value="__null__">❓ Uncategorized</option>
         </select>
+
+        <span class="filter-label">Collection:</span>
+        <select id="collection-filter" class="filter-select">
+          <option value="">🗂️ All Collections</option>
+        </select>
+
+        <button type="button" class="filter-btn" id="clear-filters-btn" style="opacity: 0.6;" title="Clear all filters">
+          🗑️ Clear
+        </button>
+
+        <div style="flex: 1;"></div>
+        <button type="button" class="stat-card button" id="select-mode-btn"
+          style="flex-shrink: 0; white-space: nowrap;">Bulk Action</button>
+      </div>
+
+      <div class="bulk-bar" id="bulk-bar">
+        <!-- Row 1: Selection and Actions -->
+        <div class="bulk-bar-row">
+          <div class="bulk-pill">Selected: <b id="bulk-count">0</b></div>
+          <button type="button" class="bulk-pill" id="bulk-select-all-btn"
+            style="cursor: pointer; background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); display: none;">
+            ✓ Select All
+          </button>
+          <button type="button" class="bulk-pill" id="bulk-select-none-btn"
+            style="cursor: pointer; background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); display: none;">
+            ✗ Select None
+          </button>
+          <button type="button" class="stat-card button" id="bulk-clear-btn">Clear</button>
+          <button type="button" class="stat-card button" id="bulk-delete-btn">Delete</button>
+          <select id="bulk-status" class="filter-select" style="min-width: 130px; max-width: 130px;">
+            <option value="">Set Status…</option>
+            <option value="chuaxem">🌑 Unviewed</option>
+            <option value="daxem">👁️ Viewed</option>
+            <option value="dangdung">🚀 In Use</option>
+          </select>
+          <select id="bulk-role" class="filter-select" style="min-width: 130px; max-width: 130px;">
+            <option value="">Set Role…</option>
+            <option value="ui-frontend">UI / Frontend</option>
+            <option value="backend-api">Backend / API</option>
+            <option value="auth">Auth</option>
+            <option value="payments">Payments</option>
+            <option value="ai-ml">AI / ML</option>
+            <option value="infra-tooling">Infra / Tooling</option>
+            <option value="other">Other</option>
+            <option value="__null__">Uncategorized</option>
+          </select>
+          <input id="bulk-collection" class="bulk-input" type="text" placeholder="Collection…"
+            list="bulk-collection-list" style="min-width: 120px; max-width: 120px;" />
+          <datalist id="bulk-collection-list"></datalist>
+          <input id="bulk-tag" class="bulk-input" type="text" placeholder="Tag…"
+            style="min-width: 100px; max-width: 100px;" />
+        </div>
+
+        <!-- Row 2: Preview and Apply/Cancel -->
+        <div class="bulk-bar-preview-row" id="bulk-preview-row" style="display: none;">
+          <div class="bulk-preview" id="bulk-preview" style="display: none;"></div>
+          <div style="flex: 1;"></div>
+          <button type="button" class="bulk-apply-btn" id="bulk-apply-btn" style="display: none;">✅ Apply</button>
+          <button type="button" class="bulk-cancel-btn" id="bulk-cancel-btn" style="display: none;">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -901,10 +1853,28 @@
       </div>
       <div class="form-group">
         <label class="form-label">Display Name</label>
-        <input id="edit-name" class="form-input" type="text" placeholder="Optional: rename how this repo is shown in your list" />
+        <input id="edit-name" class="form-input" type="text"
+          placeholder="Optional: rename how this repo is shown in your list" />
         <div style="font-size: 11px; color: #6B7280; margin-top: 4px;">
           This only changes the name shown in the extension. It does not rename the GitHub repository.
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Collection</label>
+        <input id="edit-collection" class="form-input" type="text" placeholder="e.g. Frontend, DevOps, Templates" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select id="edit-role" class="form-input">
+          <option value="ui-frontend">🎨 UI / Frontend</option>
+          <option value="backend-api">⚙️ Backend / API</option>
+          <option value="auth">🔐 Auth</option>
+          <option value="payments">💳 Payments</option>
+          <option value="ai-ml">🤖 AI / ML</option>
+          <option value="infra-tooling">🛠️ Infra / Tooling</option>
+          <option value="other">📦 Other</option>
+          <option value="__null__">❓ Uncategorized</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Description</label>
@@ -950,13 +1920,28 @@
   <footer
     style="text-align: center; padding: 30px 24px; margin-top: 60px; border-top: 1px solid var(--border); background: rgba(18, 24, 38, 0.5); border-radius: 12px 12px 0 0;">
     <p style="margin: 0; line-height: 1.6; color: var(--text-muted); font-size: 13px;">
-      Made with ❤️ by <a href="https://github.com/dacthinh05" target="_blank"
+      Made with ❤️ by <a href="https://github.com/justernguyen" target="_blank"
         style="color: var(--accent); text-decoration: none; font-weight: 700; transition: color 0.2s;">Thịnh Lynx</a>
       <span style="margin: 0 8px; opacity: 0.5;">•</span>
       <a href="https://the-bithub.com/thinhlynx" target="_blank"
         style="color: var(--accent); text-decoration: none; font-weight: 600; transition: color 0.2s;">My Bio</a>
     </p>
   </footer>
+
+  <!-- Load modules in dependency order -->
+  <script src="utils.js"></script>
+  <script src="constants.js"></script>
+  <script src="core/state.js"></script>
+  <script src="core/history-manager.js"></script>
+  <script src="core/storage-service.js"></script>
+  <script src="core/repo-service.js"></script>
+  <script src="ui/repo-renderer.js"></script>
+  <script src="ui/virtual-scroller.js"></script>
+  <script src="ui/filters.js"></script>
+  <script src="ui/modals.js"></script>
+  <script src="ui/bulk-actions.js"></script>
+  <script src="ui/event-handlers.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 
 </html>

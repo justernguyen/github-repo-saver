@@ -35,6 +35,15 @@
       "128": "icons/icon128.png"
     }
   },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Open GitHub Repo Saver Dashboard"
+    }
+  },
   "options_page": "dashboard/dashboard.html",
   "icons": {
     "16": "icons/icon16.png",
